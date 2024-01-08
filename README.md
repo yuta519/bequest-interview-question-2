@@ -1,10 +1,8 @@
 # Tamper Proof Data
 
-At Bequest, we require that important user data is tamper proof. Otherwise, our system can incorrectly distribute assets if our internal database is breached. 
-Only the user is able to update their own data.
+At Bequest, we require that important user data is tamper proof. Otherwise, our system can incorrectly distribute assets if our internal server or database is breached. 
 
-
-**1. How does the client insure that their data has not been tampered with? Assume that the database is compromised.**
+**1. How does the client ensure that their data has not been tampered with?**
 <br />
 **2. If the data has been tampered with, how can the client recover the lost data?**
 
