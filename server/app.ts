@@ -2,7 +2,6 @@ import express, { Request, Response } from "express";
 import cors from "cors";
 
 import {
-  Data,
   createData,
   getLatestData,
   restoreFromBackup,
@@ -15,14 +14,21 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+type DataResponse = {
+  id: number;
+  content: string;
+};
+
 type ErrorResponse = {
   error: string;
 };
 
-app.get("/", (_, res: Response<Data | null | ErrorResponse>) => {
+app.get("/", (_, res: Response<DataResponse | null | ErrorResponse>) => {
   try {
     const data = getLatestData();
-    return res.status(200).json(data);
+    return res
+      .status(201)
+      .json(data ? { id: data.id, content: data.content } : null);
   } catch (error: any) {
     return res.status(500).json({ error: error.message });
   }
@@ -30,11 +36,14 @@ app.get("/", (_, res: Response<Data | null | ErrorResponse>) => {
 
 app.post(
   "/",
-  (req: Request<{ data: string }>, res: Response<Data | ErrorResponse>) => {
+  (
+    req: Request<{ input: string }>,
+    res: Response<DataResponse | ErrorResponse>
+  ) => {
     try {
-      const input = req.body.data;
+      const input = req.body.input;
       const data = createData(input);
-      return res.status(201).json(data);
+      return res.status(201).json({ id: data.id, content: data.content });
     } catch (error: any) {
       return res.status(500).json({ error: error.message });
     }
@@ -50,12 +59,12 @@ app.get("/verify", (_, res: Response<{} | ErrorResponse>) => {
   }
 });
 
-app.post(
+app.get(
   "/restore",
   (_, res: Response<{ success: boolean } | ErrorResponse>) => {
     try {
       restoreFromBackup();
-      return res.status(201).json({ success: true });
+      return res.status(200).json({ success: true });
     } catch (error: any) {
       return res.status(500).json({ error: error.message });
     }
