@@ -1,35 +1,48 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 
-const API_URL = "http://localhost:8080";
+import Dialog from "./components/dialog";
+import useData from "./hooks/useData";
+import useDialog from "./hooks/useDialog";
 
 function App() {
-  const [data, setData] = useState<string>();
+  const { latestData, input, setInput, updateData, verifyData, restoreData } =
+    useData();
+  const {
+    isOpen: isCreateDialogOpen,
+    openDialog: openCreateDialog,
+    closeDialog: closeCreateDialog,
+  } = useDialog();
+  const {
+    isOpen: isVerifyDialogOpen,
+    openDialog: openVerifyDialog,
+    closeDialog: closeVerifyDialog,
+  } = useDialog();
+  const {
+    isOpen: isRestoreDialogOpen,
+    openDialog: openRestoreDialog,
+    closeDialog: closeRestoreDialog,
+  } = useDialog();
 
-  useEffect(() => {
-    getData();
-  }, []);
+  const [isCreated, setCreateStatus] = useState<boolean>(true);
+  const [isDataValid, setDataValid] = useState<boolean>(true);
+  const [isRestoreSuccess, setRestoreStatus] = useState<boolean>(true);
 
-  const getData = async () => {
-    const response = await fetch(API_URL);
-    const { data } = await response.json();
-    setData(data);
+  const onChangeInput = (e: React.ChangeEvent<HTMLInputElement>) =>
+    setInput(e.target.value);
+
+  const onCreateNewData = async () => {
+    setCreateStatus(await updateData());
+    openCreateDialog();
   };
 
-  const updateData = async () => {
-    await fetch(API_URL, {
-      method: "POST",
-      body: JSON.stringify({ data }),
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
-    });
-
-    await getData();
+  const onClickVerifyCurrentData = async () => {
+    setDataValid(await verifyData());
+    openVerifyDialog();
   };
 
-  const verifyData = async () => {
-    throw new Error("Not implemented");
+  const onClickRestore = async () => {
+    setRestoreStatus(await restoreData());
+    openRestoreDialog();
   };
 
   return (
@@ -50,19 +63,42 @@ function App() {
       <div>Saved Data</div>
       <input
         style={{ fontSize: "30px" }}
-        type="text"
-        value={data}
-        onChange={(e) => setData(e.target.value)}
+        type='text'
+        value={input ?? latestData?.content}
+        onChange={onChangeInput}
       />
-
       <div style={{ display: "flex", gap: "10px" }}>
-        <button style={{ fontSize: "20px" }} onClick={updateData}>
+        <button style={{ fontSize: "20px" }} onClick={onCreateNewData}>
           Update Data
         </button>
-        <button style={{ fontSize: "20px" }} onClick={verifyData}>
+        <button style={{ fontSize: "20px" }} onClick={onClickVerifyCurrentData}>
           Verify Data
         </button>
+        <button style={{ fontSize: "20px" }} onClick={onClickRestore}>
+          Restore Database
+        </button>
       </div>
+
+      <Dialog
+        isOpen={isCreateDialogOpen}
+        title='Create Database Status'
+        content={`${
+          isCreated ? "New data is correctly created" : "Data creation failed"
+        }`}
+        onClose={closeCreateDialog}
+      />
+      <Dialog
+        isOpen={isVerifyDialogOpen}
+        title='Verify Database Status'
+        content={`Database is ${isDataValid ? "valid" : "invalid"}`}
+        onClose={closeVerifyDialog}
+      />
+      <Dialog
+        isOpen={isRestoreDialogOpen}
+        title='Restore Database Status'
+        content={`Database Backup ${isRestoreSuccess ? "succeeds" : "fails"}`}
+        onClose={closeRestoreDialog}
+      />
     </div>
   );
 }
